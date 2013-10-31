@@ -220,7 +220,7 @@ int main(int argc, char ** argv) {
 			fputs(config, configfile);
 			fclose(configfile);
 
-			execlp("/usr/bin/dhcpd", "dhcpd", "-f", "-4", "-q", "-cf", filename, interface, NULL);
+			execlp("/usr/bin/dhcpd", "dhcpd", "-f", "-d", "-q", "-4", "-cf", filename, interface, NULL);
 
 			rc = EXIT_SUCCESS;
 			goto out;
