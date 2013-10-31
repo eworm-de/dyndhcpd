@@ -1,0 +1,5 @@
+*~
+*.o
+dyndhcpd
+config.h
+README.html
