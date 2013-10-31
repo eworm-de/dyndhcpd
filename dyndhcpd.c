@@ -177,7 +177,7 @@ int main(int argc, char ** argv) {
 
 			/* read the template */
 			if ((configfile = fopen(CONFIG_TEMPLATE, "r")) == NULL) {
-				fprintf(stderr, "Failed reading config template.\n");
+				fprintf(stderr, "Failed opening config template for reading.\n");
 				goto out;
 			}
 			fseek(configfile, 0, SEEK_END);
@@ -185,7 +185,10 @@ int main(int argc, char ** argv) {
 			fseek(configfile, 0, SEEK_SET);
 
 			config = malloc(fsize + 1);
-			fread(config, fsize, 1, configfile);
+			if ((fread(config, fsize, 1, configfile)) != 1) {
+				fprintf(stderr, "Failed reading config template.\n");
+				goto out;
+			}
 			fclose(configfile);
 			config[fsize] = 0;
 
