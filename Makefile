@@ -27,14 +27,14 @@ README.html: README.md
 
 install: install-bin install-doc
 
-install-bin: netlink-notify
+install-bin: dyndhcpd
 	$(INSTALL) -D -m0755 dyndhcpd $(DESTDIR)/usr/bin/dyndhcpd
 	$(INSTALL) -D -m0644 dyndhcpd@.service $(DESTDIR)/usr/lib/systemd/system/dyndhcpd@.service
 	$(INSTALL) -D -m0644 dhcpd.conf $(DESTDIR)/etc/dyndhcpd/dhcpd.conf
 
 install-doc: README.html
-	$(INSTALL) -D -m0644 README.md $(DESTDIR)/usr/share/doc/netlink-notify/README.md
-	$(INSTALL) -D -m0644 README.html $(DESTDIR)/usr/share/doc/netlink-notify/README.html
+	$(INSTALL) -D -m0644 README.md $(DESTDIR)/usr/share/doc/dyndhcpd/README.md
+	$(INSTALL) -D -m0644 README.html $(DESTDIR)/usr/share/doc/dyndhcpd/README.html
 
 clean:
 	$(RM) -f *.o *~ dyndhcpd README.html
