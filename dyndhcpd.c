@@ -154,13 +154,13 @@ int main(int argc, char ** argv) {
 		s_broadcast.s_addr = v_host->s_addr |~ v_mask->s_addr;
 		s_netaddress.s_addr = v_host->s_addr & v_mask->s_addr;
 
-		if (ntohl(s_broadcast.s_addr) - ntohl(v_host->s_addr) < ntohl(v_host->s_addr) - ntohl(s_netaddress.s_addr)) {
-			s_minhost.s_addr = htonl(ntohl(s_netaddress.s_addr) + 1);
-			s_maxhost.s_addr = htonl(ntohl(v_host->s_addr) - 1);
-		} else {
-			s_minhost.s_addr = htonl(ntohl(v_host->s_addr) + 1);
-			s_maxhost.s_addr = htonl(ntohl(s_broadcast.s_addr) - 1);
+		if (ntohl(s_broadcast.s_addr) - ntohl(s_netaddress.s_addr) < 2) {
+			fprintf(stderr, "We do not have addresses to serve, need a netmask with 28 bit minimum.\n");
+			return EXIT_FAILURE;
 		}
+
+		s_minhost.s_addr = htonl(ntohl(s_netaddress.s_addr) + 1);
+		s_maxhost.s_addr = htonl(ntohl(s_broadcast.s_addr) - 1);
 
 		if (inet_ntop(AF_INET, &s_broadcast, c_broadcast, INET_ADDRSTRLEN) != NULL &&
 				inet_ntop(AF_INET, &s_netaddress, c_netaddress, INET_ADDRSTRLEN) != NULL &&
