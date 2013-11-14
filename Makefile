@@ -38,3 +38,6 @@ install-doc: README.html
 
 clean:
 	$(RM) -f *.o *~ dyndhcpd README.html
+
+distclean:
+	$(RM) -f *.o *~ dyndhcpd README.html config.h
