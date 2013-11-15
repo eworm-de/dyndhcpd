@@ -155,7 +155,7 @@ int main(int argc, char ** argv) {
 		s_netaddress.s_addr = v_host->s_addr & v_mask->s_addr;
 
 		if (ntohl(s_broadcast.s_addr) - ntohl(s_netaddress.s_addr) < 2) {
-			fprintf(stderr, "We do not have addresses to serve, need a netmask with 28 bit minimum.\n");
+			fprintf(stderr, "We do not have addresses to serve, need a netmask with 30 bit minimum.\n");
 			return EXIT_FAILURE;
 		}
 
