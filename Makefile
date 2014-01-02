@@ -42,3 +42,7 @@ clean:
 
 distclean:
 	$(RM) -f *.o *~ dyndhcpd README.html version.h config.h
+
+release:
+	git archive --format=tar.xz --prefix=dyndhcpd-$(VERSION)/ $(VERSION) > dyndhcpd-$(VERSION).tar.xz
+	gpg -ab dyndhcpd-$(VERSION).tar.xz

@@ -4,3 +4,5 @@ dyndhcpd
 config.h
 README.html
 version.h
+dyndhcpd-*.tar.xz
+dyndhcpd-*.tar.xz.asc
