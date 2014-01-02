@@ -18,6 +18,7 @@
 #include <string.h>
 
 #include "config.h"
+#include "version.h"
 
 /*** str_replace ***/
 char * str_replace(char * original, const char * pattern, const char * replacement) {
