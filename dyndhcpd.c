@@ -1,5 +1,5 @@
 /*
- * (C) 2013 by Christian Hesse <mail@eworm.de>
+ * (C) 2013-2014 by Christian Hesse <mail@eworm.de>
  *
  * This software may be used and distributed according to the terms
  * of the GNU General Public License, incorporated herein by reference.
@@ -38,7 +38,7 @@ char * str_replace(char * original, const char * pattern, const char * replaceme
 	char * const returned = (char *) malloc(sizeof(char) * (retlen + 1));
 
 	if (returned != NULL) {
-		/* copy the original string, 
+		/* copy the original string,
 		 * replacing all the instances of the pattern */
 		char * retptr = returned;
 		for (oriptr = original; (patloc = strstr(oriptr, pattern)); oriptr = patloc + patlen) {
@@ -133,12 +133,12 @@ int main(int argc, char ** argv) {
 		if (strcmp(interface, ifa->ifa_name) != 0)
 			continue;
 		if (ifa->ifa_addr == NULL)
-			continue;  
+			continue;
 		if (!(ifa->ifa_flags & IFF_UP))
 			continue;
 		if (ifa->ifa_addr->sa_family != AF_INET)
 			continue;
-				
+
 		s4 = (struct sockaddr_in *)ifa->ifa_addr;
 		v_host = &s4->sin_addr;
 
@@ -228,7 +228,6 @@ int main(int argc, char ** argv) {
 			fprintf(stderr, "Failed converting number to string\n");
 			goto out;
 		}
-		
 	}
 
 	fprintf(stderr, "Interface not found or no address.\n");
