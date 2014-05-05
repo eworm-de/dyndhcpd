@@ -67,7 +67,9 @@ int main(int argc, char ** argv) {
 	struct sockaddr_in * s4;
 	struct in_addr * v_host, * v_mask;
 	struct in_addr s_broadcast, s_netaddress, s_minhost, s_maxhost;
-	char c_address[INET_ADDRSTRLEN], c_netmask[INET_ADDRSTRLEN], c_netaddress[INET_ADDRSTRLEN], c_broadcast[INET_ADDRSTRLEN], c_minhost[INET_ADDRSTRLEN], c_maxhost[INET_ADDRSTRLEN];
+	char c_address[INET_ADDRSTRLEN], c_netmask[INET_ADDRSTRLEN],
+	     c_netaddress[INET_ADDRSTRLEN], c_broadcast[INET_ADDRSTRLEN],
+	     c_minhost[INET_ADDRSTRLEN], c_maxhost[INET_ADDRSTRLEN];
 	char * interface = NULL;
 
 	char hostname[254];
@@ -81,6 +83,7 @@ int main(int argc, char ** argv) {
 
 	printf("Starting dyndhcpd/" VERSION " (compiled: " __DATE__ ", " __TIME__ ")\n");
 
+	/* get command line options */
 	for (i = 1; i < argc; i++) {
 		switch ((int)argv[i][0]) {
 			case '-':
@@ -106,11 +109,13 @@ int main(int argc, char ** argv) {
 		}
 	}
 
+	/* bail if we are not root */
 	if (getuid() > 0) {
 		fprintf(stderr, "You need to be root!\n");
 		goto out;
 	}
 
+	/* get the domainname */
 	gethostname(hostname, 254);
 	hp = gethostbyname(hostname);
 	if ((domainname = strchr(hp->h_name, '.')) != NULL)
@@ -120,17 +125,21 @@ int main(int argc, char ** argv) {
 		domainname = FALLBACKDOMAIN;
 	}
 
+	/* give an error if we do not have an interface */
 	if (interface == NULL) {
 		fprintf(stderr, "No interface given!\n");
 		return EXIT_FAILURE;
 	}
 
+	/* initialize ifaddr */
 	if (getifaddrs(&ifaddr) == -1) {
 		fprintf(stderr, "getifaddrs() failed.\n");
 		return EXIT_FAILURE;
 	}
 
+	/* to find the correct interface */
 	for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+		/* next iteration if requirements do not match */
 		if (strcmp(interface, ifa->ifa_name) != 0)
 			continue;
 		if (ifa->ifa_addr == NULL)
@@ -149,33 +158,42 @@ int main(int argc, char ** argv) {
 		if (!(ifa->ifa_flags & IFF_RUNNING))
 			fprintf(stderr, "Warning: Interface %s is not connected.\n", interface);
 
+		/* get variables in place for address */
 		s4 = (struct sockaddr_in *)ifa->ifa_addr;
 		v_host = &s4->sin_addr;
 
+		/* convert address from binary to text form */
 		if (!inet_ntop(ifa->ifa_addr->sa_family, v_host, c_address, INET_ADDRSTRLEN))
 			fprintf(stderr, "%s: inet_ntop failed!\n", ifa->ifa_name);
 
+		/* get variables in place for netmask */
 		s4 = (struct sockaddr_in *)ifa->ifa_netmask;
 		v_mask = &s4->sin_addr;
 
+		/* convert netmask from binary to text form */
 		if (!inet_ntop(ifa->ifa_netmask->sa_family, v_mask, c_netmask, INET_ADDRSTRLEN))
 			fprintf(stderr, "%s: inet_ntop failed!\n", ifa->ifa_name);
 
+		/* calculate broadcast and net address */
 		s_broadcast.s_addr = v_host->s_addr |~ v_mask->s_addr;
 		s_netaddress.s_addr = v_host->s_addr & v_mask->s_addr;
 
+		/* check if subnet has enough addresses */
 		if (ntohl(s_broadcast.s_addr) - ntohl(s_netaddress.s_addr) < 2) {
 			fprintf(stderr, "We do not have addresses to serve, need a netmask with 30 bit minimum.\n");
 			goto out;
 		}
 
+		/* calculate min and max host */
 		s_minhost.s_addr = htonl(ntohl(s_netaddress.s_addr) + 1);
 		s_maxhost.s_addr = htonl(ntohl(s_broadcast.s_addr) - 1);
 
+		/* convert missing addresses from binary to text form */
 		if (inet_ntop(AF_INET, &s_broadcast, c_broadcast, INET_ADDRSTRLEN) != NULL &&
 				inet_ntop(AF_INET, &s_netaddress, c_netaddress, INET_ADDRSTRLEN) != NULL &&
 				inet_ntop(AF_INET, &s_minhost, c_minhost, INET_ADDRSTRLEN) != NULL &&
 				inet_ntop(AF_INET, &s_maxhost, c_maxhost, INET_ADDRSTRLEN) != NULL) {
+			/* print information */
 			printf("Interface: %s\n"
 					"Domain: %s\n"
 					"Host Address: %s\n"
@@ -185,15 +203,18 @@ int main(int argc, char ** argv) {
 					"Hosts: %s - %s\n", interface, domainname, c_address, c_netaddress, c_broadcast, c_netmask, c_minhost, c_maxhost);
 
 
-			/* read the template */
+			/* open the template for reading */
 			if ((configfile = fopen(CONFIG_TEMPLATE, "r")) == NULL) {
 				fprintf(stderr, "Failed opening config template for reading.\n");
 				goto out;
 			}
+
+			/* seek to the and so we know the file size */
 			fseek(configfile, 0, SEEK_END);
 			fsize = ftell(configfile);
 			fseek(configfile, 0, SEEK_SET);
 
+			/* allocate memory and read file */
 			config = malloc(fsize + 1);
 			if ((fread(config, fsize, 1, configfile)) != 1) {
 				fprintf(stderr, "Failed reading config template.\n");
@@ -202,6 +223,7 @@ int main(int argc, char ** argv) {
 			fclose(configfile);
 			config[fsize] = 0;
 
+			/* replace strings with real values */
 			if ((config = str_replace(config, "__INTERFACE__", interface)) == NULL)
 				goto out;
 			if ((config = str_replace(config, "__VERSION__", VERSION)) == NULL)
@@ -221,28 +243,37 @@ int main(int argc, char ** argv) {
 			if ((config = str_replace(config, "__MAXHOST__", c_maxhost)) == NULL)
 				goto out;
 
+			/* get new filename and open file for writing */
 			filename = malloc(strlen(CONFIG_OUTPUT) + strlen(interface) + 1);
 			sprintf(filename, CONFIG_OUTPUT, interface);
 			if ((configfile = fopen(filename, "w")) == NULL) {
 				fprintf(stderr, "Failed opening config file for writing.\n");
 				goto out;
 			}
+
+			/* actually write the final configuration to file and close it */
 			fputs(config, configfile);
 			fclose(configfile);
 
+			/* execute dhcp daemon, replace the current process
+			 * dyndhcpd is cleared from memory here and code below is not execuded if
+			 * everything goes well */
 			execlp("/usr/bin/dhcpd", "dhcpd", "-f", "-d", "-q", "-4", "-cf", filename, interface, NULL);
 
 			rc = EXIT_SUCCESS;
 			goto out;
 		} else {
+			/* failed to convert addresses from binary to string */
 			fprintf(stderr, "Failed converting number to string\n");
 			goto out;
 		}
 	}
 
+	/* we did not find an interface to work with */
 	fprintf(stderr, "Interface not found, link down or no address.\n");
 
 out:
+	/* free memory */
 	if (filename != NULL)
 		free(filename);
 	if (config != NULL)
