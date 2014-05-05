@@ -135,10 +135,19 @@ int main(int argc, char ** argv) {
 			continue;
 		if (ifa->ifa_addr == NULL)
 			continue;
-		if (!(ifa->ifa_flags & IFF_UP))
-			continue;
 		if (ifa->ifa_addr->sa_family != AF_INET)
 			continue;
+
+		/* check if the device is up */
+		if (!(ifa->ifa_flags & IFF_UP)) {
+			fprintf(stderr, "Interface %s is down.\n", interface);
+			goto out;
+		}
+
+		/* check if the device is connected / cable is plugged in
+		 * do warn here, but do not fail */
+		if (!(ifa->ifa_flags & IFF_RUNNING))
+			fprintf(stderr, "Warning: Interface %s is not connected.\n", interface);
 
 		s4 = (struct sockaddr_in *)ifa->ifa_addr;
 		v_host = &s4->sin_addr;
