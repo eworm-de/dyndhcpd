@@ -231,7 +231,7 @@ int main(int argc, char ** argv) {
 		}
 	}
 
-	fprintf(stderr, "Interface not found or no address.\n");
+	fprintf(stderr, "Interface not found, link down or no address.\n");
 
 out:
 	if (filename != NULL)
