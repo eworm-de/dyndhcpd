@@ -61,7 +61,7 @@ char * str_replace(char * original, const char * pattern, const char * replaceme
 
 /*** main ***/
 int main(int argc, char ** argv) {
-	int i, rc = EXIT_FAILURE;
+	int i, rc = EXIT_FAILURE, verbose = 0;
 
 	struct ifaddrs *ifaddr = NULL, *ifa;
 	struct sockaddr_in * s4;
@@ -90,8 +90,11 @@ int main(int argc, char ** argv) {
 			case '-':
 				switch ((int)argv[i][1]) {
 					case 'h':
-						fprintf(stderr, "usage: %s [-h] [-iINTERFACE]\n", argv[0]);
+						fprintf(stderr, "usage: %s [-h] [-iINTERFACE] [-v]\n", argv[0]);
 						return EXIT_SUCCESS;
+					case 'v':
+						verbose++;
+						break;
 					case 'i':
 						interface = argv[i] + 2;
 						if (strlen(interface) == 0) {
@@ -195,7 +198,8 @@ int main(int argc, char ** argv) {
 				inet_ntop(AF_INET, &s_minhost, c_minhost, INET_ADDRSTRLEN) != NULL &&
 				inet_ntop(AF_INET, &s_maxhost, c_maxhost, INET_ADDRSTRLEN) != NULL) {
 			/* print information */
-			printf("Interface: %s\n"
+			if (verbose)
+				printf("Interface: %s\n"
 					"Domain: %s\n"
 					"Host Address: %s\n"
 					"Network Address: %s\n"
@@ -263,12 +267,18 @@ int main(int argc, char ** argv) {
 			sprintf(leasesfile, LEASESFILE, interface);
 
 			/* check if leases file exists, create it if it does not */
-			if (access(leasesfile, R_OK) == -1)
+			if (access(leasesfile, R_OK) == -1) {
+				if (verbose)
+					printf("Creating leases file %s.\n", leasesfile);
 				fclose(fopen(leasesfile, "w"));
+			}
 
 			/* execute dhcp daemon, replace the current process
 			 * dyndhcpd is cleared from memory here and code below is not execuded if
 			 * everything goes well */
+			if (verbose > 1)
+				printf("Running: dhcpd -f -d -q -4 -pf %s -lf %s -cf %s %s\n",
+					pidfile, leasesfile, filename, interface);
 			execlp("/usr/bin/dhcpd", "dhcpd", "-f", "-d", "-q", "-4",
 				"-pf", pidfile, "-lf", leasesfile, "-cf", filename, interface, NULL);
 
