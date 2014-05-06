@@ -262,6 +262,10 @@ int main(int argc, char ** argv) {
 			leasesfile = malloc(strlen(LEASESFILE) + strlen(interface) + 1);
 			sprintf(leasesfile, LEASESFILE, interface);
 
+			/* check if leases file exists, create it if it does not */
+			if (access(leasesfile, R_OK) == -1)
+				fclose(fopen(leasesfile, "w"));
+
 			/* execute dhcp daemon, replace the current process
 			 * dyndhcpd is cleared from memory here and code below is not execuded if
 			 * everything goes well */
