@@ -80,6 +80,7 @@ int main(int argc, char ** argv) {
 	char * config = NULL;
 	char * filename = NULL;
 	FILE * configfile;
+	char * pidfile = NULL, * leasesfile = NULL;
 
 	printf("Starting dyndhcpd/" VERSION " (compiled: " __DATE__ ", " __TIME__ ")\n");
 
@@ -255,10 +256,17 @@ int main(int argc, char ** argv) {
 			fputs(config, configfile);
 			fclose(configfile);
 
+			/* get names for pid and leases file */
+			pidfile = malloc(strlen(PIDFILE) + strlen(interface) + 1);
+			sprintf(pidfile, PIDFILE, interface);
+			leasesfile = malloc(strlen(LEASESFILE) + strlen(interface) + 1);
+			sprintf(leasesfile, LEASESFILE, interface);
+
 			/* execute dhcp daemon, replace the current process
 			 * dyndhcpd is cleared from memory here and code below is not execuded if
 			 * everything goes well */
-			execlp("/usr/bin/dhcpd", "dhcpd", "-f", "-d", "-q", "-4", "-cf", filename, interface, NULL);
+			execlp("/usr/bin/dhcpd", "dhcpd", "-f", "-d", "-q", "-4",
+				"-pf", pidfile, "-lf", leasesfile, "-cf", filename, interface, NULL);
 
 			rc = EXIT_SUCCESS;
 			goto out;
@@ -274,6 +282,10 @@ int main(int argc, char ** argv) {
 
 out:
 	/* free memory */
+	if (leasesfile != NULL)
+		free(leasesfile);
+	if (pidfile != NULL)
+		free(pidfile);
 	if (filename != NULL)
 		free(filename);
 	if (config != NULL)

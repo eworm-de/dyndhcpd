@@ -13,7 +13,11 @@
 
 /* pathes for config file, first is read, second is written */
 #define CONFIG_TEMPLATE	"/etc/dyndhcpd/dhcpd.conf"
-#define CONFIG_OUTPUT	"/tmp/dhcpd_%s.conf"
+#define CONFIG_OUTPUT	"/run/dhcpd-%s.conf"
+
+/* pathes for pid and leases file, these are passed to dhcpd */
+#define PIDFILE		"/run/dhcpd-%s.pid"
+#define LEASESFILE	"/var/lib/dhcp/dhcp-%s.leases"
 
 #endif /* _CONFIG_H */
 
