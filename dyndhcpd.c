@@ -85,33 +85,22 @@ int main(int argc, char ** argv) {
 	printf("Starting dyndhcpd/" VERSION " (compiled: " __DATE__ ", " __TIME__ ")\n");
 
 	/* get command line options */
-	for (i = 1; i < argc; i++) {
-		switch ((int)argv[i][0]) {
-			case '-':
-				switch ((int)argv[i][1]) {
-					case 'h':
-						fprintf(stderr, "usage: %s [-h] [-iINTERFACE] [-v]\n", argv[0]);
-						return EXIT_SUCCESS;
-					case 'v':
-						verbose++;
-						break;
-					case 'i':
-						interface = argv[i] + 2;
-						if (strlen(interface) == 0) {
-							fprintf(stderr, "No interface given!\n");
-							return EXIT_FAILURE;
-						}
-						break;
-					default:
-						fprintf(stderr, "unknown option: '%s'\n", argv[i]);
-						return EXIT_FAILURE;
+	while ((i = getopt(argc, argv, "hi:v")) != -1)
+		switch (i) {
+			case 'h':
+				fprintf(stderr, "usage: %s [-h] -i INTERFACE [-v]\n", argv[0]);
+				return EXIT_SUCCESS;
+			case 'i':
+				interface = optarg;
+				if (strlen(interface) == 0) {
+					fprintf(stderr, "No interface given!\n");
+					return EXIT_FAILURE;
 				}
 				break;
-			default:
-				fprintf(stderr, "unknown command line argument: '%s'\n", argv[i]);
-				return EXIT_FAILURE;
+			case 'v':
+				verbose++;
+				break;
 		}
-	}
 
 	/* bail if we are not root */
 	if (getuid() > 0) {
