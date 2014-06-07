@@ -76,6 +76,7 @@ int main(int argc, char ** argv) {
 	char * domainname;
 	struct hostent *hp;
 
+	char * config_template = NULL;
 	size_t fsize;
 	char * config = NULL;
 	char * filename = NULL;
@@ -85,10 +86,17 @@ int main(int argc, char ** argv) {
 	printf("Starting dyndhcpd/" VERSION " (compiled: " __DATE__ ", " __TIME__ ")\n");
 
 	/* get command line options */
-	while ((i = getopt(argc, argv, "hi:v")) != -1)
+	while ((i = getopt(argc, argv, "c:hi:v")) != -1)
 		switch (i) {
+			case 'c':
+				config_template = optarg;
+				if (strlen(config_template) == 0) {
+					fprintf(stderr, "Requested different config file, but no name given.\n");
+					return EXIT_FAILURE;
+				}
+				break;
 			case 'h':
-				fprintf(stderr, "usage: %s [-h] -i INTERFACE [-v]\n", argv[0]);
+				fprintf(stderr, "usage: %s [-c config] [-h] -i INTERFACE [-v]\n", argv[0]);
 				return EXIT_SUCCESS;
 			case 'i':
 				interface = optarg;
@@ -202,9 +210,10 @@ int main(int argc, char ** argv) {
 					"Netmask: %s\n"
 					"Hosts: %s - %s\n", interface, domainname, c_address, c_netaddress, c_broadcast, c_netmask, c_minhost, c_maxhost);
 
-
 			/* open the template for reading */
-			if ((configfile = fopen(CONFIG_TEMPLATE, "r")) == NULL) {
+			if (config_template == NULL)
+				config_template = CONFIG_TEMPLATE;
+			if ((configfile = fopen(config_template, "r")) == NULL) {
 				fprintf(stderr, "Failed opening config template for reading.\n");
 				goto out;
 			}
