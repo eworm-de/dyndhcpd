@@ -15,6 +15,9 @@
 #define CONFIG_TEMPLATE	"/etc/dyndhcpd/dhcpd.conf"
 #define CONFIG_OUTPUT	"/run/dhcpd-%s.conf"
 
+/* dhcpd executable */
+#define DHCPDFILE	"/usr/bin/dhcpd"
+
 /* pathes for pid and leases file, these are passed to dhcpd */
 #define PIDFILE		"/run/dhcpd-%s.pid"
 #define LEASESFILE	"/var/lib/dhcp/dhcp-%s.leases"

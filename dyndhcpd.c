@@ -108,6 +108,12 @@ int main(int argc, char ** argv) {
 		goto out;
 	}
 
+	/* check if dhcpd exists and is executable */
+	if (access(DHCPDFILE, X_OK) == -1) {
+		fprintf(stderr, "The dhcp daemon is not execatable!\n");
+		goto out;
+	}
+
 	/* get the domainname */
 	gethostname(hostname, 254);
 	hp = gethostbyname(hostname);
@@ -268,7 +274,7 @@ int main(int argc, char ** argv) {
 			if (verbose > 1)
 				printf("Running: dhcpd -f -d -q -4 -pf %s -lf %s -cf %s %s\n",
 					pidfile, leasesfile, filename, interface);
-			execlp("/usr/bin/dhcpd", "dhcpd", "-f", "-d", "-q", "-4",
+			execlp(DHCPDFILE, "dhcpd", "-f", "-d", "-q", "-4",
 				"-pf", pidfile, "-lf", leasesfile, "-cf", filename, interface, NULL);
 
 			rc = EXIT_SUCCESS;
