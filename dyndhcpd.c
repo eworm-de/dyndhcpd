@@ -274,10 +274,11 @@ int main(int argc, char ** argv) {
 			if (verbose > 1)
 				printf("Running: dhcpd -f -d -q -4 -pf %s -lf %s -cf %s %s\n",
 					pidfile, leasesfile, filename, interface);
-			execlp(DHCPDFILE, "dhcpd", "-f", "-d", "-q", "-4",
+			rc = execlp(DHCPDFILE, "dhcpd", "-f", "-d", "-q", "-4",
 				"-pf", pidfile, "-lf", leasesfile, "-cf", filename, interface, NULL);
 
-			rc = EXIT_SUCCESS;
+			fprintf(stderr, "The dhcp daemon failed to execute.\n");
+
 			goto out;
 		} else {
 			/* failed to convert addresses from binary to string */
