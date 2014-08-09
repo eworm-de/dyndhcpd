@@ -16,9 +16,20 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <getopt.h>
 
 #include "config.h"
 #include "version.h"
+
+const static char optstring[] = "c:hi:v";
+const static struct option options_long[] = {
+	/* name			has_arg			flag	val */
+	{ "config",		required_argument,	NULL,	'c' },
+	{ "help",		no_argument,		NULL,	'h' },
+	{ "interface",		required_argument,	NULL,	'i' },
+	{ "verbose",		no_argument,		NULL,	'v' },
+	{ 0, 0, 0, 0 }
+};
 
 /*** str_replace ***/
 char * str_replace(char * original, const char * pattern, const char * replacement) {
@@ -86,7 +97,7 @@ int main(int argc, char ** argv) {
 	printf("Starting dyndhcpd/" VERSION " (compiled: " __DATE__ ", " __TIME__ ")\n");
 
 	/* get command line options */
-	while ((i = getopt(argc, argv, "c:hi:v")) != -1)
+	while ((i = getopt_long(argc, argv, optstring, options_long, NULL)) != -1)
 		switch (i) {
 			case 'c':
 				config_template = optarg;
