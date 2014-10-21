@@ -3,25 +3,9 @@
  *
  * This software may be used and distributed according to the terms
  * of the GNU General Public License, incorporated herein by reference.
- *
- * This is an example code skeleton provided by vim-skeleton.
  */
 
-#define _GNU_SOURCE
-
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <net/if.h>
-#include <netdb.h>
-#include <ifaddrs.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <getopt.h>
-
-#include "config.h"
-#include "version.h"
+#include "dyndhcpd.h"
 
 const static char optstring[] = "c:hi:v";
 const static struct option options_long[] = {
