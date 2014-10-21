@@ -7,6 +7,8 @@
  * This is an example code skeleton provided by vim-skeleton.
  */
 
+#define _GNU_SOURCE
+
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <net/if.h>
