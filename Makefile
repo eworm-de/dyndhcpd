@@ -31,7 +31,8 @@ install: install-bin install-doc
 install-bin: dyndhcpd
 	$(INSTALL) -D -m0755 dyndhcpd $(DESTDIR)/usr/bin/dyndhcpd
 	$(INSTALL) -D -m0644 dyndhcpd@.service $(DESTDIR)/usr/lib/systemd/system/dyndhcpd@.service
-	$(INSTALL) -D -m0644 dhcpd.conf $(DESTDIR)/etc/dyndhcpd/dhcpd.conf
+	$(INSTALL) -D -m0644 config/dhcpd.conf $(DESTDIR)/etc/dyndhcpd/dhcpd.conf
+	$(INSTALL) -D -m0644 config/ipxe-options.conf $(DESTDIR)/etc/dyndhcpd/ipxe-options.conf
 
 install-doc: README.html
 	$(INSTALL) -D -m0644 README.md $(DESTDIR)/usr/share/doc/dyndhcpd/README.md
