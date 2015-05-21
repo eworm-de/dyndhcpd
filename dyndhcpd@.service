@@ -1,6 +1,6 @@
 [Unit]
 Description=IPv4 DHCP server for interface %i
-After=network.target netctl@%i.service
+After=network.target
 
 [Service]
 ExecStart=/usr/bin/dyndhcpd -i%i
