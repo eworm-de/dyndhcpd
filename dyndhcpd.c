@@ -17,48 +17,10 @@ const static struct option options_long[] = {
 	{ 0, 0, 0, 0 }
 };
 
-/*** str_replace ***/
-char * str_replace(char * original, const char * pattern, const char * replacement) {
-	size_t const replen = strlen(replacement);
-	size_t const patlen = strlen(pattern);
-	size_t const orilen = strlen(original);
-
-	size_t patcnt = 0;
-	const char * oriptr;
-	const char * patloc;
-
-	/* find how many times the pattern occurs in the original string */
-	for (oriptr = original; (patloc = strstr(oriptr, pattern)); oriptr = patloc + patlen)
-		patcnt++;
-
-	/* allocate memory for the new string */
-	size_t const retlen = orilen + patcnt * (replen - patlen);
-	char * const returned = (char *) malloc(sizeof(char) * (retlen + 1));
-
-	if (returned != NULL) {
-		/* copy the original string,
-		 * replacing all the instances of the pattern */
-		char * retptr = returned;
-		for (oriptr = original; (patloc = strstr(oriptr, pattern)); oriptr = patloc + patlen) {
-			size_t const skplen = patloc - oriptr;
-			/* copy the section until the occurence of the pattern */
-			strncpy(retptr, oriptr, skplen);
-			retptr += skplen;
-			/* copy the replacement */
-			strncpy(retptr, replacement, replen);
-			retptr += replen;
-		}
-		/* copy the rest of the string */
-		strcpy(retptr, oriptr);
-		free(original);
-		return returned;
-	}
-	return NULL;
-}
-
 /*** main ***/
 int main(int argc, char ** argv) {
 	int i, rc = EXIT_FAILURE, verbose = 0;
+	const char * tmp;
 
 	struct ifaddrs *ifaddr = NULL, *ifa;
 	struct sockaddr_in * s4;
@@ -73,12 +35,13 @@ int main(int argc, char ** argv) {
 	char * domainname;
 	struct hostent *hp;
 
+	char * template = NULL;
 	FILE * templatefile;
 	const char * templatefilename = NULL;
 	char * config = NULL;
 	FILE * configfile;
 	char * configfilename = NULL;
-	size_t fsize;
+	size_t fsize, length = 0;
 
 	char * pidfile = NULL, * leasesfile = NULL;
 
@@ -223,33 +186,65 @@ int main(int argc, char ** argv) {
 			fseek(templatefile, 0, SEEK_SET);
 
 			/* allocate memory and read file */
-			config = malloc(fsize + 1);
-			if ((fread(config, fsize, 1, templatefile)) != 1) {
+			template = malloc(fsize + 1);
+			if ((fread(template, fsize, 1, templatefile)) != 1) {
 				fprintf(stderr, "Failed reading config template.\n");
 				goto out;
 			}
 			fclose(templatefile);
-			config[fsize] = 0;
+			template[fsize] = 0;
 
 			/* replace strings with real values */
-			if ((config = str_replace(config, "__INTERFACE__", interface)) == NULL)
-				goto out;
-			if ((config = str_replace(config, "__VERSION__", VERSION)) == NULL)
-				goto out;
-			if ((config = str_replace(config, "__DOMAINNAME__", domainname)) == NULL)
-				goto out;
-			if ((config = str_replace(config, "__ADDRESS__", c_address)) == NULL)
-				goto out;
-			if ((config = str_replace(config, "__NETADDRESS__", c_netaddress)) == NULL)
-				goto out;
-			if ((config = str_replace(config, "__BROADCAST__", c_broadcast)) == NULL)
-				goto out;
-			if ((config = str_replace(config, "__NETMASK__", c_netmask)) == NULL)
-				goto out;
-			if ((config = str_replace(config, "__MINHOST__", c_minhost)) == NULL)
-				goto out;
-			if ((config = str_replace(config, "__MAXHOST__", c_maxhost)) == NULL)
-				goto out;
+			for (tmp = template; *tmp;) {
+				if (*tmp == '_') {
+					if (strncmp("__INTERFACE__", tmp, 13) == 0) {
+						config = realloc(config, length + strlen(interface) + 1);
+						length += sprintf(config + length, interface);
+						tmp += 13;
+					} else if (strncmp("__VERSION__", tmp, 11) == 0) {
+						config = realloc(config, length + strlen(VERSION) + 1);
+						length += sprintf(config + length, VERSION);
+						tmp += 11;
+					} else if (strncmp("__DOMAINNAME__", tmp, 14) == 0) {
+						config = realloc(config, length + strlen(domainname) + 1);
+						length += sprintf(config + length, domainname);
+						tmp += 14;
+					} else if (strncmp("__ADDRESS__", tmp, 11) == 0) {
+						config = realloc(config, length + strlen(c_address) + 1);
+						length += sprintf(config + length, c_address);
+						tmp += 11;
+					} else if (strncmp("__NETADDRESS__", tmp, 14) == 0) {
+						config = realloc(config, length + strlen(c_netaddress) + 1);
+						length += sprintf(config + length, c_netaddress);
+						tmp += 14;
+					} else if (strncmp("__BROADCAST__", tmp, 13) == 0) {
+						config = realloc(config, length + strlen(c_broadcast) + 1);
+						length += sprintf(config + length, c_broadcast);
+						tmp += 13;
+					} else if (strncmp("__NETMASK__", tmp, 11) == 0) {
+						config = realloc(config, length + strlen(c_netmask) + 1);
+						length += sprintf(config + length, c_netmask);
+						tmp += 11;
+					} else if (strncmp("__MINHOST__", tmp, 11) == 0) {
+						config = realloc(config, length + strlen(c_minhost) + 1);
+						length += sprintf(config + length, c_minhost);
+						tmp += 11;
+					} else if (strncmp("__MAXHOST__", tmp, 11) == 0) {
+						config = realloc(config, length + strlen(c_maxhost) + 1);
+						length += sprintf(config + length, c_maxhost);
+						tmp += 11;
+					} else {
+						config = realloc(config, length + 1);
+						config[length++] = *tmp++;
+					}
+				} else {
+					config = realloc(config, length + 1);
+					config[length++] = *tmp++;
+				}
+			}
+			config = realloc(config, length + 1);
+			config[length++] = 0;
+
 
 			/* get new filename and open file for writing */
 			configfilename = malloc(strlen(CONFIG_OUTPUT) + strlen(interface) + 1);
@@ -308,6 +303,8 @@ out:
 		free(configfilename);
 	if (config != NULL)
 		free(config);
+	if (template != NULL)
+		free(template);
 	if (ifaddr != NULL)
 		freeifaddrs(ifaddr);
 
