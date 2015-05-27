@@ -245,7 +245,6 @@ int main(int argc, char ** argv) {
 			config = realloc(config, length + 1);
 			config[length++] = 0;
 
-
 			/* get new filename and open file for writing */
 			configfilename = malloc(strlen(CONFIG_OUTPUT) + strlen(interface) + 1);
 			sprintf(configfilename, CONFIG_OUTPUT, interface);
