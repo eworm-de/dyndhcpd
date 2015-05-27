@@ -73,11 +73,13 @@ int main(int argc, char ** argv) {
 	char * domainname;
 	struct hostent *hp;
 
-	char * config_template = NULL;
-	size_t fsize;
+	FILE * templatefile;
+	const char * templatefilename = NULL;
 	char * config = NULL;
-	char * filename = NULL;
 	FILE * configfile;
+	char * configfilename = NULL;
+	size_t fsize;
+
 	char * pidfile = NULL, * leasesfile = NULL;
 
 	printf("Starting dyndhcpd/" VERSION " (compiled: " __DATE__ ", " __TIME__ ")\n");
@@ -86,8 +88,8 @@ int main(int argc, char ** argv) {
 	while ((i = getopt_long(argc, argv, optstring, options_long, NULL)) != -1)
 		switch (i) {
 			case 'c':
-				config_template = optarg;
-				if (strlen(config_template) == 0) {
+				templatefilename = optarg;
+				if (strlen(templatefilename) == 0) {
 					fprintf(stderr, "Requested different config file, but no name given.\n");
 					return EXIT_FAILURE;
 				}
@@ -208,25 +210,25 @@ int main(int argc, char ** argv) {
 					"Hosts: %s - %s\n", interface, domainname, c_address, c_netaddress, c_broadcast, c_netmask, c_minhost, c_maxhost);
 
 			/* open the template for reading */
-			if (config_template == NULL)
-				config_template = CONFIG_TEMPLATE;
-			if ((configfile = fopen(config_template, "r")) == NULL) {
+			if (templatefilename == NULL)
+				templatefilename = CONFIG_TEMPLATE;
+			if ((templatefile = fopen(templatefilename, "r")) == NULL) {
 				fprintf(stderr, "Failed opening config template for reading.\n");
 				goto out;
 			}
 
 			/* seek to the and so we know the file size */
-			fseek(configfile, 0, SEEK_END);
-			fsize = ftell(configfile);
-			fseek(configfile, 0, SEEK_SET);
+			fseek(templatefile, 0, SEEK_END);
+			fsize = ftell(templatefile);
+			fseek(templatefile, 0, SEEK_SET);
 
 			/* allocate memory and read file */
 			config = malloc(fsize + 1);
-			if ((fread(config, fsize, 1, configfile)) != 1) {
+			if ((fread(config, fsize, 1, templatefile)) != 1) {
 				fprintf(stderr, "Failed reading config template.\n");
 				goto out;
 			}
-			fclose(configfile);
+			fclose(templatefile);
 			config[fsize] = 0;
 
 			/* replace strings with real values */
@@ -250,9 +252,9 @@ int main(int argc, char ** argv) {
 				goto out;
 
 			/* get new filename and open file for writing */
-			filename = malloc(strlen(CONFIG_OUTPUT) + strlen(interface) + 1);
-			sprintf(filename, CONFIG_OUTPUT, interface);
-			if ((configfile = fopen(filename, "w")) == NULL) {
+			configfilename = malloc(strlen(CONFIG_OUTPUT) + strlen(interface) + 1);
+			sprintf(configfilename, CONFIG_OUTPUT, interface);
+			if ((configfile = fopen(configfilename, "w")) == NULL) {
 				fprintf(stderr, "Failed opening config file for writing.\n");
 				goto out;
 			}
@@ -279,9 +281,9 @@ int main(int argc, char ** argv) {
 			 * everything goes well */
 			if (verbose > 1)
 				printf("Running: dhcpd -f -q -4 -pf %s -lf %s -cf %s %s\n",
-					pidfile, leasesfile, filename, interface);
+					pidfile, leasesfile, configfilename, interface);
 			rc = execlp(DHCPDFILE, "dhcpd", "-f", "-q", "-4",
-				"-pf", pidfile, "-lf", leasesfile, "-cf", filename, interface, NULL);
+				"-pf", pidfile, "-lf", leasesfile, "-cf", configfilename, interface, NULL);
 
 			fprintf(stderr, "The dhcp daemon failed to execute.\n");
 
@@ -302,8 +304,8 @@ out:
 		free(leasesfile);
 	if (pidfile != NULL)
 		free(pidfile);
-	if (filename != NULL)
-		free(filename);
+	if (configfilename != NULL)
+		free(configfilename);
 	if (config != NULL)
 		free(config);
 	if (ifaddr != NULL)
