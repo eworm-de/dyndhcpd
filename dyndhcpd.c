@@ -17,6 +17,20 @@ const static struct option options_long[] = {
 	{ 0, 0, 0, 0 }
 };
 
+/*** replace ***/
+int replace(char ** config, size_t *length, const char ** tmp,
+		const char * template, const char * value) {
+	size_t templatelength = strlen(template);
+
+	if (strncmp(template, *tmp, templatelength) == 0) {
+		*config = realloc(*config, *length + strlen(value) + 1);
+		*length += sprintf(*config + *length, value);
+		*tmp += templatelength;
+		return 1;
+	}
+	return 0;
+}
+
 /*** main ***/
 int main(int argc, char ** argv) {
 	int i, rc = EXIT_FAILURE, verbose = 0;
@@ -197,42 +211,16 @@ int main(int argc, char ** argv) {
 			/* replace strings with real values */
 			for (tmp = template; *tmp;) {
 				if (*tmp == '_') {
-					if (strncmp("__INTERFACE__", tmp, 13) == 0) {
-						config = realloc(config, length + strlen(interface) + 1);
-						length += sprintf(config + length, interface);
-						tmp += 13;
-					} else if (strncmp("__VERSION__", tmp, 11) == 0) {
-						config = realloc(config, length + strlen(VERSION) + 1);
-						length += sprintf(config + length, VERSION);
-						tmp += 11;
-					} else if (strncmp("__DOMAINNAME__", tmp, 14) == 0) {
-						config = realloc(config, length + strlen(domainname) + 1);
-						length += sprintf(config + length, domainname);
-						tmp += 14;
-					} else if (strncmp("__ADDRESS__", tmp, 11) == 0) {
-						config = realloc(config, length + strlen(c_address) + 1);
-						length += sprintf(config + length, c_address);
-						tmp += 11;
-					} else if (strncmp("__NETADDRESS__", tmp, 14) == 0) {
-						config = realloc(config, length + strlen(c_netaddress) + 1);
-						length += sprintf(config + length, c_netaddress);
-						tmp += 14;
-					} else if (strncmp("__BROADCAST__", tmp, 13) == 0) {
-						config = realloc(config, length + strlen(c_broadcast) + 1);
-						length += sprintf(config + length, c_broadcast);
-						tmp += 13;
-					} else if (strncmp("__NETMASK__", tmp, 11) == 0) {
-						config = realloc(config, length + strlen(c_netmask) + 1);
-						length += sprintf(config + length, c_netmask);
-						tmp += 11;
-					} else if (strncmp("__MINHOST__", tmp, 11) == 0) {
-						config = realloc(config, length + strlen(c_minhost) + 1);
-						length += sprintf(config + length, c_minhost);
-						tmp += 11;
-					} else if (strncmp("__MAXHOST__", tmp, 11) == 0) {
-						config = realloc(config, length + strlen(c_maxhost) + 1);
-						length += sprintf(config + length, c_maxhost);
-						tmp += 11;
+					if (replace(&config, &length, &tmp, "__INTERFACE__", interface) ||
+						replace(&config, &length, &tmp, "__VERSION__", VERSION) ||
+						replace(&config, &length, &tmp, "__DOMAINNAME__", domainname) ||
+						replace(&config, &length, &tmp, "__ADDRESS__", c_address) ||
+						replace(&config, &length, &tmp, "__NETADDRESS__", c_netaddress) ||
+						replace(&config, &length, &tmp, "__BROADCAST__", c_broadcast) ||
+						replace(&config, &length, &tmp, "__NETMASK__", c_netmask) ||
+						replace(&config, &length, &tmp, "__MINHOST__", c_minhost) ||
+						replace(&config, &length, &tmp, "__MAXHOST__", c_maxhost)) {
+						/* do nothing, work has been done */
 					} else {
 						config = realloc(config, length + 1);
 						config[length++] = *tmp++;
