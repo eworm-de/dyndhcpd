@@ -138,23 +138,19 @@ int main(int argc, char ** argv) {
 		if (!(ifa->ifa_flags & IFF_RUNNING))
 			fprintf(stderr, "Warning: Interface %s is not connected.\n", interface);
 
-		/* get variables in place for address */
+		/* get variables in place for address and convert from binary to text */
 		s4 = (struct sockaddr_in *)ifa->ifa_addr;
 		memcpy(&address.i, &s4->sin_addr, sizeof(struct in_addr));
-
-		/* convert address from binary to text form */
 		if (!inet_ntop(AF_INET, &address.i, address.c, INET_ADDRSTRLEN))
 			fprintf(stderr, "%s: inet_ntop failed!\n", ifa->ifa_name);
 
-		/* get variables in place for netmask */
+		/* get variables in place for netmask and convert from binary to text */
 		s4 = (struct sockaddr_in *)ifa->ifa_netmask;
 		memcpy(&netmask.i, &s4->sin_addr, sizeof(struct in_addr));
-
-		/* convert netmask from binary to text form */
 		if (!inet_ntop(AF_INET, &netmask.i, netmask.c, INET_ADDRSTRLEN))
 			fprintf(stderr, "%s: inet_ntop failed!\n", ifa->ifa_name);
 
-		/* calculate broadcast and net address */
+		/* calculate broadcast and netaddress */
 		broadcast.i.s_addr = address.i.s_addr |~ netmask.i.s_addr;
 		netaddress.i.s_addr = address.i.s_addr & netmask.i.s_addr;
 
