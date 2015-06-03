@@ -24,6 +24,11 @@
 #include "config.h"
 #include "version.h"
 
+struct address {
+	struct in_addr i;
+        char c[INET_ADDRSTRLEN];
+};
+
 /*** replace ***/
 int replace(char ** config, size_t *length, const char ** tmp,
 		const char * template, const char * value);

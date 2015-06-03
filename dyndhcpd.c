@@ -38,11 +38,8 @@ int main(int argc, char ** argv) {
 
 	struct ifaddrs *ifaddr = NULL, *ifa;
 	struct sockaddr_in * s4;
-	struct in_addr * v_host, * v_mask;
-	struct in_addr s_broadcast, s_netaddress, s_minhost, s_maxhost;
-	char c_address[INET_ADDRSTRLEN], c_netmask[INET_ADDRSTRLEN],
-	     c_netaddress[INET_ADDRSTRLEN], c_broadcast[INET_ADDRSTRLEN],
-	     c_minhost[INET_ADDRSTRLEN], c_maxhost[INET_ADDRSTRLEN];
+	struct address address, netmask, netaddress,
+		       broadcast, minhost, maxhost;
 	char * interface = NULL;
 
 	char hostname[254];
@@ -143,39 +140,39 @@ int main(int argc, char ** argv) {
 
 		/* get variables in place for address */
 		s4 = (struct sockaddr_in *)ifa->ifa_addr;
-		v_host = &s4->sin_addr;
+		memcpy(&address.i, &s4->sin_addr, sizeof(struct in_addr));
 
 		/* convert address from binary to text form */
-		if (!inet_ntop(ifa->ifa_addr->sa_family, v_host, c_address, INET_ADDRSTRLEN))
+		if (!inet_ntop(AF_INET, &address.i, address.c, INET_ADDRSTRLEN))
 			fprintf(stderr, "%s: inet_ntop failed!\n", ifa->ifa_name);
 
 		/* get variables in place for netmask */
 		s4 = (struct sockaddr_in *)ifa->ifa_netmask;
-		v_mask = &s4->sin_addr;
+		memcpy(&netmask.i, &s4->sin_addr, sizeof(struct in_addr));
 
 		/* convert netmask from binary to text form */
-		if (!inet_ntop(ifa->ifa_netmask->sa_family, v_mask, c_netmask, INET_ADDRSTRLEN))
+		if (!inet_ntop(AF_INET, &netmask.i, netmask.c, INET_ADDRSTRLEN))
 			fprintf(stderr, "%s: inet_ntop failed!\n", ifa->ifa_name);
 
 		/* calculate broadcast and net address */
-		s_broadcast.s_addr = v_host->s_addr |~ v_mask->s_addr;
-		s_netaddress.s_addr = v_host->s_addr & v_mask->s_addr;
+		broadcast.i.s_addr = address.i.s_addr |~ netmask.i.s_addr;
+		netaddress.i.s_addr = address.i.s_addr & netmask.i.s_addr;
 
 		/* check if subnet has enough addresses */
-		if (ntohl(s_broadcast.s_addr) - ntohl(s_netaddress.s_addr) < 2) {
+		if (ntohl(broadcast.i.s_addr) - ntohl(netaddress.i.s_addr) < 2) {
 			fprintf(stderr, "We do not have addresses to serve, need a netmask with 30 bit minimum.\n");
 			goto out;
 		}
 
 		/* calculate min and max host */
-		s_minhost.s_addr = htonl(ntohl(s_netaddress.s_addr) + 1);
-		s_maxhost.s_addr = htonl(ntohl(s_broadcast.s_addr) - 1);
+		minhost.i.s_addr = htonl(ntohl(netaddress.i.s_addr) + 1);
+		maxhost.i.s_addr = htonl(ntohl(broadcast.i.s_addr) - 1);
 
 		/* convert missing addresses from binary to text form */
-		if (inet_ntop(AF_INET, &s_broadcast, c_broadcast, INET_ADDRSTRLEN) != NULL &&
-				inet_ntop(AF_INET, &s_netaddress, c_netaddress, INET_ADDRSTRLEN) != NULL &&
-				inet_ntop(AF_INET, &s_minhost, c_minhost, INET_ADDRSTRLEN) != NULL &&
-				inet_ntop(AF_INET, &s_maxhost, c_maxhost, INET_ADDRSTRLEN) != NULL) {
+		if (inet_ntop(AF_INET, &broadcast.i, broadcast.c, INET_ADDRSTRLEN) != NULL &&
+				inet_ntop(AF_INET, &netaddress.i, netaddress.c, INET_ADDRSTRLEN) != NULL &&
+				inet_ntop(AF_INET, &minhost.i, minhost.c, INET_ADDRSTRLEN) != NULL &&
+				inet_ntop(AF_INET, &maxhost.i, maxhost.c, INET_ADDRSTRLEN) != NULL) {
 			/* print information */
 			if (verbose)
 				printf("Interface: %s\n"
@@ -184,7 +181,8 @@ int main(int argc, char ** argv) {
 					"Network Address: %s\n"
 					"Broadcast: %s\n"
 					"Netmask: %s\n"
-					"Hosts: %s - %s\n", interface, domainname, c_address, c_netaddress, c_broadcast, c_netmask, c_minhost, c_maxhost);
+					"Hosts: %s - %s\n", interface, domainname, address.c, netaddress.c,
+						broadcast.c, netmask.c, minhost.c, maxhost.c);
 
 			/* open the template for reading */
 			if (templatefilename == NULL)
@@ -214,12 +212,12 @@ int main(int argc, char ** argv) {
 					if (replace(&config, &length, &tmp, "__INTERFACE__", interface) ||
 						replace(&config, &length, &tmp, "__VERSION__", VERSION) ||
 						replace(&config, &length, &tmp, "__DOMAINNAME__", domainname) ||
-						replace(&config, &length, &tmp, "__ADDRESS__", c_address) ||
-						replace(&config, &length, &tmp, "__NETADDRESS__", c_netaddress) ||
-						replace(&config, &length, &tmp, "__BROADCAST__", c_broadcast) ||
-						replace(&config, &length, &tmp, "__NETMASK__", c_netmask) ||
-						replace(&config, &length, &tmp, "__MINHOST__", c_minhost) ||
-						replace(&config, &length, &tmp, "__MAXHOST__", c_maxhost)) {
+						replace(&config, &length, &tmp, "__ADDRESS__", address.c) ||
+						replace(&config, &length, &tmp, "__NETADDRESS__", netaddress.c) ||
+						replace(&config, &length, &tmp, "__BROADCAST__", broadcast.c) ||
+						replace(&config, &length, &tmp, "__NETMASK__", netmask.c) ||
+						replace(&config, &length, &tmp, "__MINHOST__", minhost.c) ||
+						replace(&config, &length, &tmp, "__MAXHOST__", maxhost.c)) {
 						/* do nothing, work has been done */
 					} else {
 						config = realloc(config, length + 1);
