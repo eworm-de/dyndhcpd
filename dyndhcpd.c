@@ -37,9 +37,7 @@ int main(int argc, char ** argv) {
 	const char * tmp;
 
 	struct ifaddrs *ifaddr = NULL, *ifa;
-	struct sockaddr_in * s4;
-	struct address address, netmask, netaddress,
-		       broadcast, minhost, maxhost;
+	struct network network, dhcp, bootp;
 	char * interface = NULL;
 
 	char hostname[254];
@@ -138,47 +136,57 @@ int main(int argc, char ** argv) {
 		if (!(ifa->ifa_flags & IFF_RUNNING))
 			fprintf(stderr, "Warning: Interface %s is not connected.\n", interface);
 
-		/* get variables in place for address and convert from binary to text */
-		s4 = (struct sockaddr_in *)ifa->ifa_addr;
-		memcpy(&address.i, &s4->sin_addr, sizeof(struct in_addr));
-		if (!inet_ntop(AF_INET, &address.i, address.c, INET_ADDRSTRLEN))
-			fprintf(stderr, "%s: inet_ntop failed!\n", ifa->ifa_name);
-
-		/* get variables in place for netmask and convert from binary to text */
-		s4 = (struct sockaddr_in *)ifa->ifa_netmask;
-		memcpy(&netmask.i, &s4->sin_addr, sizeof(struct in_addr));
-		if (!inet_ntop(AF_INET, &netmask.i, netmask.c, INET_ADDRSTRLEN))
-			fprintf(stderr, "%s: inet_ntop failed!\n", ifa->ifa_name);
-
-		/* calculate broadcast and netaddress */
-		broadcast.i.s_addr = address.i.s_addr |~ netmask.i.s_addr;
-		netaddress.i.s_addr = address.i.s_addr & netmask.i.s_addr;
+		/* get variables in place for address and netmask */
+		memcpy(&network.address.i, &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr, sizeof(struct in_addr));
+		memcpy(&network.netmask.i, &((struct sockaddr_in *)ifa->ifa_netmask)->sin_addr, sizeof(struct in_addr));
 
 		/* check if subnet has enough addresses */
-		if (ntohl(broadcast.i.s_addr) - ntohl(netaddress.i.s_addr) < 2) {
-			fprintf(stderr, "We do not have addresses to serve, need a netmask with 30 bit minimum.\n");
+		if ((network.netmask.i.s_addr & 0x0f000000) > 0) {
+			fprintf(stderr, "We do not have addresses to serve, need a netmask with 28 bit minimum.\n");
 			goto out;
 		}
 
-		/* calculate min and max host */
-		minhost.i.s_addr = htonl(ntohl(netaddress.i.s_addr) + 1);
-		maxhost.i.s_addr = htonl(ntohl(broadcast.i.s_addr) - 1);
+		/* calculate broadcast and netaddress */
+		network.broadcast.i.s_addr = network.address.i.s_addr | ~network.netmask.i.s_addr;
+		network.netaddress.i.s_addr = network.address.i.s_addr & network.netmask.i.s_addr;
 
-		/* convert missing addresses from binary to text form */
-		if (inet_ntop(AF_INET, &broadcast.i, broadcast.c, INET_ADDRSTRLEN) != NULL &&
-				inet_ntop(AF_INET, &netaddress.i, netaddress.c, INET_ADDRSTRLEN) != NULL &&
-				inet_ntop(AF_INET, &minhost.i, minhost.c, INET_ADDRSTRLEN) != NULL &&
-				inet_ntop(AF_INET, &maxhost.i, maxhost.c, INET_ADDRSTRLEN) != NULL) {
+		/* calculate for dhcp subnet */
+		dhcp.netmask.i.s_addr = htonl(ntohl(network.netmask.i.s_addr) >> 1 | (1 << 31));
+		dhcp.address.i.s_addr = network.address.i.s_addr ^ (dhcp.netmask.i.s_addr ^ network.netmask.i.s_addr);
+		dhcp.broadcast.i.s_addr = dhcp.address.i.s_addr | ~dhcp.netmask.i.s_addr;
+		dhcp.netaddress.i.s_addr = dhcp.address.i.s_addr & dhcp.netmask.i.s_addr;
+		dhcp.minhost.i.s_addr = htonl(ntohl(dhcp.netaddress.i.s_addr) + 1);
+		dhcp.maxhost.i.s_addr = htonl(ntohl(dhcp.broadcast.i.s_addr) - 1);
+
+		/* calculate for pxe subnet */
+		bootp.netmask.i.s_addr = htonl(ntohl(dhcp.netmask.i.s_addr) >> 1 | (1 << 31));
+		bootp.address.i.s_addr = network.address.i.s_addr ^ (bootp.netmask.i.s_addr ^ dhcp.netmask.i.s_addr);
+		bootp.broadcast.i.s_addr = bootp.address.i.s_addr | ~bootp.netmask.i.s_addr;
+		bootp.netaddress.i.s_addr = bootp.address.i.s_addr & bootp.netmask.i.s_addr;
+		bootp.minhost.i.s_addr = htonl(ntohl(bootp.netaddress.i.s_addr) + 1);
+		bootp.maxhost.i.s_addr = htonl(ntohl(bootp.broadcast.i.s_addr) - 1);
+
+		/* convert addresses from binary to text form */
+		if (inet_ntop(AF_INET, &network.address.i, network.address.c, INET_ADDRSTRLEN) != NULL &&
+				inet_ntop(AF_INET, &network.netmask.i, network.netmask.c, INET_ADDRSTRLEN) != NULL &&
+				inet_ntop(AF_INET, &network.broadcast.i, network.broadcast.c, INET_ADDRSTRLEN) != NULL &&
+				inet_ntop(AF_INET, &network.netaddress.i, network.netaddress.c, INET_ADDRSTRLEN) != NULL &&
+				inet_ntop(AF_INET, &dhcp.minhost.i, dhcp.minhost.c, INET_ADDRSTRLEN) != NULL &&
+				inet_ntop(AF_INET, &dhcp.maxhost.i, dhcp.maxhost.c, INET_ADDRSTRLEN) != NULL &&
+				inet_ntop(AF_INET, &bootp.minhost.i, bootp.minhost.c, INET_ADDRSTRLEN) != NULL &&
+				inet_ntop(AF_INET, &bootp.maxhost.i, bootp.maxhost.c, INET_ADDRSTRLEN) != NULL) {
 			/* print information */
 			if (verbose)
-				printf("Interface: %s\n"
-					"Domain: %s\n"
+				printf("Interface:    %s\n"
+					"Domain:       %s\n"
 					"Host Address: %s\n"
-					"Network Address: %s\n"
-					"Broadcast: %s\n"
-					"Netmask: %s\n"
-					"Hosts: %s - %s\n", interface, domainname, address.c, netaddress.c,
-						broadcast.c, netmask.c, minhost.c, maxhost.c);
+					"Network:      %s\n"
+					"Broadcast:    %s\n"
+					"Netmask:      %s\n"
+					"Hosts DHCP:   %s - %s\n"
+					"Hosts BOOTP:  %s - %s\n",
+						interface, domainname, network.address.c, network.netaddress.c,	network.broadcast.c, network.netmask.c,
+						dhcp.minhost.c, dhcp.maxhost.c, bootp.minhost.c, bootp.maxhost.c);
 
 			/* open the template for reading */
 			if (templatefilename == NULL)
@@ -208,12 +216,14 @@ int main(int argc, char ** argv) {
 					if (replace(&config, &length, &tmp, "__INTERFACE__", interface) ||
 						replace(&config, &length, &tmp, "__VERSION__", VERSION) ||
 						replace(&config, &length, &tmp, "__DOMAINNAME__", domainname) ||
-						replace(&config, &length, &tmp, "__ADDRESS__", address.c) ||
-						replace(&config, &length, &tmp, "__NETADDRESS__", netaddress.c) ||
-						replace(&config, &length, &tmp, "__BROADCAST__", broadcast.c) ||
-						replace(&config, &length, &tmp, "__NETMASK__", netmask.c) ||
-						replace(&config, &length, &tmp, "__MINHOST__", minhost.c) ||
-						replace(&config, &length, &tmp, "__MAXHOST__", maxhost.c)) {
+						replace(&config, &length, &tmp, "__ADDRESS__", network.address.c) ||
+						replace(&config, &length, &tmp, "__NETADDRESS__", network.netaddress.c) ||
+						replace(&config, &length, &tmp, "__BROADCAST__", network.broadcast.c) ||
+						replace(&config, &length, &tmp, "__NETMASK__", network.netmask.c) ||
+						replace(&config, &length, &tmp, "__MINDHCP__", dhcp.minhost.c) ||
+						replace(&config, &length, &tmp, "__MAXDHCP__", dhcp.maxhost.c) ||
+						replace(&config, &length, &tmp, "__MINBOOTP__", bootp.minhost.c) ||
+						replace(&config, &length, &tmp, "__MAXBOOTP__", bootp.maxhost.c)) {
 						/* do nothing, work has been done */
 					} else {
 						config = realloc(config, length + 1);

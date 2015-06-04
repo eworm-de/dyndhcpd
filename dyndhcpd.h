@@ -29,6 +29,15 @@ struct address {
         char c[INET_ADDRSTRLEN];
 };
 
+struct network {
+	struct address address;
+	struct address netaddress;
+	struct address netmask;
+	struct address broadcast;
+	struct address minhost;
+	struct address maxhost;
+};
+
 /*** replace ***/
 int replace(char ** config, size_t *length, const char ** tmp,
 		const char * template, const char * value);
