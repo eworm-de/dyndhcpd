@@ -4,6 +4,10 @@ After=network.target
 
 [Service]
 ExecStart=/usr/bin/dyndhcpd -i%i
+ProtectSystem=full
+ProtectHome=on
+PrivateDevices=on
+NoNewPrivileges=on
 
 [Install]
 WantedBy=multi-user.target
