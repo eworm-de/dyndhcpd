@@ -24,6 +24,8 @@
 #include "config.h"
 #include "version.h"
 
+#define PROGNAME	"dyndhcpd"
+
 struct address {
 	struct in_addr i;
         char c[INET_ADDRSTRLEN];

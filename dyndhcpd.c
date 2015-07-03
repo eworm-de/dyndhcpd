@@ -7,13 +7,14 @@
 
 #include "dyndhcpd.h"
 
-const static char optstring[] = "c:hi:v";
+const static char optstring[] = "c:hi:vV";
 const static struct option options_long[] = {
 	/* name			has_arg			flag	val */
 	{ "config",		required_argument,	NULL,	'c' },
 	{ "help",		no_argument,		NULL,	'h' },
 	{ "interface",		required_argument,	NULL,	'i' },
 	{ "verbose",		no_argument,		NULL,	'v' },
+	{ "version",		no_argument,		NULL,	'V' },
 	{ 0, 0, 0, 0 }
 };
 
@@ -54,7 +55,7 @@ int main(int argc, char ** argv) {
 
 	char * pidfile = NULL, * leasesfile = NULL;
 
-	printf("Starting dyndhcpd/" VERSION " (compiled: " __DATE__ ", " __TIME__ ")\n");
+	unsigned int version = 0, help = 0;
 
 	/* get command line options */
 	while ((i = getopt_long(argc, argv, optstring, options_long, NULL)) != -1)
@@ -67,8 +68,8 @@ int main(int argc, char ** argv) {
 				}
 				break;
 			case 'h':
-				fprintf(stderr, "usage: %s [-c config] [-h] -i INTERFACE [-v]\n", argv[0]);
-				return EXIT_SUCCESS;
+				help++;
+				break;
 			case 'i':
 				interface = optarg;
 				if (strlen(interface) == 0) {
@@ -79,7 +80,20 @@ int main(int argc, char ** argv) {
 			case 'v':
 				verbose++;
 				break;
+			case 'V':
+				verbose++;
+				version++;
+				break;
 		}
+
+	if (verbose > 0)
+		printf("%s: %s v%s (compiled: " __DATE__ ", " __TIME__ ")\n", argv[0], PROGNAME, VERSION);
+
+	if (help > 0)
+		fprintf(stderr, "usage: %s [-c config] [-h] -i INTERFACE [-v] [-V]\n", argv[0]);
+
+	if (version > 0 || help > 0)
+		return EXIT_SUCCESS;
 
 	/* bail if we are not root */
 	if (getuid() > 0) {
