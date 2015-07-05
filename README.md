@@ -33,3 +33,8 @@ Usage
 
 Just run `dyndhcpd -i <interface>` or start a systemd unit with
 `systemctl start dyndhcpd@<interface>`.
+
+### Upstream
+
+URL: [GitHub.com](https://github.com/eworm-de/dyndhcpd)  
+Mirror: [eworm.de](http://git.eworm.de/cgit.cgi/dyndhcpd/)
