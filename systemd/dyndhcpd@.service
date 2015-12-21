@@ -1,6 +1,7 @@
 [Unit]
 Description=IPv4 DHCP server for interface %i
 After=network.target
+Requires=sys-subsystem-net-devices-%i.device
 
 [Service]
 ExecStart=/usr/bin/dyndhcpd -i%i
