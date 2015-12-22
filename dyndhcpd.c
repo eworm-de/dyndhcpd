@@ -113,7 +113,7 @@ int main(int argc, char ** argv) {
 	if ((domainname = strchr(hp->h_name, '.')) != NULL)
 		domainname++;
 	else {
-		fprintf(stderr, "Could not get domainname, using '" FALLBACKDOMAIN "\n");
+		fprintf(stderr, "Could not get domainname, using '" FALLBACKDOMAIN "'\n");
 		domainname = FALLBACKDOMAIN;
 	}
 
