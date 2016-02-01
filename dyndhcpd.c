@@ -190,17 +190,23 @@ int main(int argc, char ** argv) {
 				inet_ntop(AF_INET, &bootp.minhost.i, bootp.minhost.c, INET_ADDRSTRLEN) != NULL &&
 				inet_ntop(AF_INET, &bootp.maxhost.i, bootp.maxhost.c, INET_ADDRSTRLEN) != NULL) {
 			/* print information */
-			if (verbose)
-				printf("Interface:    %s\n"
+			if (verbose) {
+				int pad = strlen(dhcp.minhost.c) > strlen(bootp.minhost.c) ?
+					strlen(dhcp.minhost.c) : strlen(bootp.minhost.c);
+				printf( "Interface:    %s\n"
 					"Domain:       %s\n"
 					"Host Address: %s\n"
 					"Network:      %s\n"
 					"Broadcast:    %s\n"
 					"Netmask:      %s\n"
-					"Hosts DHCP:   %s - %s\n"
-					"Hosts BOOTP:  %s - %s\n",
-						interface, domainname, network.address.c, network.netaddress.c,	network.broadcast.c, network.netmask.c,
-						dhcp.minhost.c, dhcp.maxhost.c, bootp.minhost.c, bootp.maxhost.c);
+					"Hosts DHCP:   %-*s - %s\n"
+					"Hosts BOOTP:  %-*s - %s\n",
+						interface, domainname,
+						network.address.c, network.netaddress.c,
+						network.broadcast.c, network.netmask.c,
+						pad, dhcp.minhost.c, dhcp.maxhost.c,
+						pad, bootp.minhost.c, bootp.maxhost.c);
+			}
 
 			/* open the template for reading */
 			if (templatefilename == NULL)
