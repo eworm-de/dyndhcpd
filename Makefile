@@ -8,7 +8,7 @@ CP	:= cp
 CFLAGS	+= -std=c11 -O2 -Wall -Werror
 # this is just a fallback in case you do not use git but downloaded
 # a release tarball...
-VERSION := 0.1.2
+VERSION := 0.1.3
 
 all: dyndhcpd README.html
 
