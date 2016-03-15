@@ -47,7 +47,7 @@ int main(int argc, char ** argv) {
 
 	char * template = NULL;
 	FILE * templatefile;
-	const char * templatefilename = NULL;
+	const char * templatefilename = CONFIG_TEMPLATE;
 	char * config = NULL;
 	FILE * configfile;
 	char * configfilename = NULL;
@@ -209,26 +209,25 @@ int main(int argc, char ** argv) {
 			}
 
 			/* open the template for reading */
-			if (templatefilename == NULL)
-				templatefilename = CONFIG_TEMPLATE;
-			if ((templatefile = fopen(templatefilename, "r")) == NULL) {
-				fprintf(stderr, "Failed opening config template for reading.\n");
-				goto out;
-			}
+			if ((templatefile = fopen(templatefilename, "r")) != NULL) {
+				/* seek to the and so we know the file size */
+				fseek(templatefile, 0, SEEK_END);
+				fsize = ftell(templatefile);
+				fseek(templatefile, 0, SEEK_SET);
 
-			/* seek to the and so we know the file size */
-			fseek(templatefile, 0, SEEK_END);
-			fsize = ftell(templatefile);
-			fseek(templatefile, 0, SEEK_SET);
-
-			/* allocate memory and read file */
-			template = malloc(fsize + 1);
-			if ((fread(template, fsize, 1, templatefile)) != 1) {
-				fprintf(stderr, "Failed reading config template.\n");
-				goto out;
+				/* allocate memory and read file */
+				template = malloc(fsize + 1);
+				if ((fread(template, fsize, 1, templatefile)) != 1) {
+					fprintf(stderr, "Failed reading config template.\n");
+					goto out;
+				}
+				fclose(templatefile);
+				template[fsize] = 0;
+			} else {
+				fprintf(stderr, "Failed opening config template for reading.\n"
+						"Using fallback to built in defaults, functionality is limited.\n");
+				template = strdup(FALLBACKCONFIG);
 			}
-			fclose(templatefile);
-			template[fsize] = 0;
 
 			/* replace strings with real values */
 			for (tmp = template; *tmp;) {
