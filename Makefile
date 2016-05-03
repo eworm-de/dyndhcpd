@@ -1,11 +1,16 @@
 # dyndhcpd - Dynamically start DHCP Daemon
 
+# commands
 CC	:= gcc
 MD	:= markdown
 INSTALL	:= install
 RM	:= rm
 CP	:= cp
-CFLAGS	+= -std=c11 -O2 -Wall -Werror
+
+# flags
+CFLAGS	+= -std=c11 -O2 -fPIC -Wall -Werror
+LDFLAGS	+= -Wl,-z,now -Wl,-z,relro -pie
+
 # this is just a fallback in case you do not use git but downloaded
 # a release tarball...
 VERSION := 0.1.3
@@ -21,7 +26,7 @@ version.h: $(wildcard .git/HEAD .git/index .git/refs/tags/*) Makefile
 	echo "#endif" >> $@
 
 dyndhcpd: dyndhcpd.c dyndhcpd.h config.h version.h
-	$(CC) $(CFLAGS) -o dyndhcpd dyndhcpd.c
+	$(CC) $(CFLAGS) $(LDFLAGS) -o dyndhcpd dyndhcpd.c
 
 README.html: README.md
 	$(MD) README.md > README.html
