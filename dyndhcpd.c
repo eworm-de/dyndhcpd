@@ -107,8 +107,13 @@ int main(int argc, char ** argv) {
 		goto out;
 	}
 
+	/* get the hostname */
+	if (gethostname(hostname, HOST_NAME_MAX) == -1) {
+		fprintf(stderr, "Failed to get the hostname.\n");
+		goto out;
+	}
+
 	/* get the domainname */
-	gethostname(hostname, HOST_NAME_MAX);
 	hp = gethostbyname(hostname);
 	if ((domainname = strchr(hp->h_name, '.')) != NULL)
 		domainname++;
