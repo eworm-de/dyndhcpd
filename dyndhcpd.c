@@ -239,6 +239,7 @@ int main(int argc, char ** argv) {
 				if (*tmp == '_') {
 					if (replace(&config, &length, &tmp, "__INTERFACE__", interface) ||
 						replace(&config, &length, &tmp, "__VERSION__", VERSION) ||
+						replace(&config, &length, &tmp, "__HOSTNAME__", hostname) ||
 						replace(&config, &length, &tmp, "__DOMAINNAME__", domainname) ||
 						replace(&config, &length, &tmp, "__ADDRESS__", network.address.c) ||
 						replace(&config, &length, &tmp, "__NETADDRESS__", network.netaddress.c) ||
