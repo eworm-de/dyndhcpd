@@ -42,7 +42,7 @@ int main(int argc, char ** argv) {
 	char * interface = NULL;
 
 	char hostname[HOST_NAME_MAX];
-	char * domainname;
+	const char * domainname;
 	struct hostent *hp;
 
 	char * template = NULL;
