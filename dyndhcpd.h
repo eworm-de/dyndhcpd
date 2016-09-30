@@ -14,6 +14,7 @@
 #include <sys/socket.h>
 #include <net/if.h>
 #include <netdb.h>
+#include <limits.h>
 #include <ifaddrs.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -41,7 +41,7 @@ int main(int argc, char ** argv) {
 	struct network network, dhcp, bootp;
 	char * interface = NULL;
 
-	char hostname[254];
+	char hostname[HOST_NAME_MAX];
 	char * domainname;
 	struct hostent *hp;
 
@@ -108,7 +108,7 @@ int main(int argc, char ** argv) {
 	}
 
 	/* get the domainname */
-	gethostname(hostname, 254);
+	gethostname(hostname, HOST_NAME_MAX);
 	hp = gethostbyname(hostname);
 	if ((domainname = strchr(hp->h_name, '.')) != NULL)
 		domainname++;
