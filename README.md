@@ -37,4 +37,4 @@ Just run `dyndhcpd -i <interface>` or start a systemd unit with
 ### Upstream
 
 URL: [GitHub.com](https://github.com/eworm-de/dyndhcpd)  
-Mirror: [eworm.de](http://git.eworm.de/cgit.cgi/dyndhcpd/)
+Mirror: [eworm.de](https://git.eworm.de/cgit.cgi/dyndhcpd/)
