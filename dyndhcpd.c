@@ -7,14 +7,18 @@
 
 #include "dyndhcpd.h"
 
-const static char optstring[] = "c:hi:vV";
+const static char optstring[] = "c:hi:l:p:u:vVw:";
 const static struct option options_long[] = {
 	/* name			has_arg			flag	val */
 	{ "config",		required_argument,	NULL,	'c' },
 	{ "help",		no_argument,		NULL,	'h' },
 	{ "interface",		required_argument,	NULL,	'i' },
+	{ "leases",		required_argument,	NULL,	'l' },
+	{ "pidfile",		required_argument,	NULL,	'p' },
+	{ "user",		required_argument,	NULL,	'u' },
 	{ "verbose",		no_argument,		NULL,	'v' },
 	{ "version",		no_argument,		NULL,	'V' },
+	{ "write-config",	required_argument,	NULL,	'w' },
 	{ 0, 0, 0, 0 }
 };
 
@@ -53,7 +57,7 @@ int main(int argc, char ** argv) {
 	char * configfilename = NULL;
 	size_t fsize, length = 0;
 
-	char * pidfile = NULL, * leasesfile = NULL;
+	char * pidfile = NULL, * leasesfile = NULL, * username = NULL;
 
 	unsigned int version = 0, help = 0;
 
@@ -77,12 +81,24 @@ int main(int argc, char ** argv) {
 					return EXIT_FAILURE;
 				}
 				break;
+			case 'l':
+				leasesfile = strdup(optarg);
+				break;
+			case 'p':
+				pidfile = strdup(optarg);
+				break;
+			case 'u':
+				username = optarg;
+				break;
 			case 'v':
 				verbose++;
 				break;
 			case 'V':
 				verbose++;
 				version++;
+				break;
+			case 'w':
+				configfilename = strdup(optarg);
 				break;
 		}
 
@@ -263,10 +279,14 @@ int main(int argc, char ** argv) {
 			config[length++] = 0;
 
 			/* get new filename and open file for writing */
-			configfilename = malloc(strlen(CONFIG_OUTPUT) + strlen(interface) + 1);
-			sprintf(configfilename, CONFIG_OUTPUT, interface);
+			if (configfilename == NULL) {
+				configfilename = malloc(strlen(CONFIG_OUTPUT) + strlen(interface) + 1);
+				sprintf(configfilename, CONFIG_OUTPUT, interface);
+			}
+
+			/* try to open the config file for writing */
 			if ((configfile = fopen(configfilename, "w")) == NULL) {
-				fprintf(stderr, "Failed opening config file for writing.\n");
+				fprintf(stderr, "Failed opening config file '%s' for writing.\n", configfilename);
 				goto out;
 			}
 
@@ -274,26 +294,36 @@ int main(int argc, char ** argv) {
 			fputs(config, configfile);
 			fclose(configfile);
 
-			/* get names for pid and leases file */
-			pidfile = malloc(strlen(PIDFILE) + strlen(interface) + 1);
-			sprintf(pidfile, PIDFILE, interface);
-			leasesfile = malloc(strlen(LEASESFILE) + strlen(interface) + 1);
-			sprintf(leasesfile, LEASESFILE, interface);
+			/* get name for pidfile */
+			if (pidfile == NULL) {
+				pidfile = malloc(strlen(PIDFILE) + strlen(interface) + 1);
+				sprintf(pidfile, PIDFILE, interface);
+			}
+
+			/* get name for leases file */
+			if (leasesfile == NULL) {
+				leasesfile = malloc(strlen(LEASESFILE) + strlen(interface) + 1);
+				sprintf(leasesfile, LEASESFILE, interface);
+			}
 
 			/* check if leases file exists, create it if it does not */
 			if (access(leasesfile, R_OK) == -1) {
 				if (verbose)
-					printf("Creating leases file %s.\n", leasesfile);
+					printf("Creating leases file '%s'.\n", leasesfile);
 				fclose(fopen(leasesfile, "w"));
 			}
+
+			/* get use name */
+			if (username == NULL)
+				username = USER;
 
 			/* execute dhcp daemon, replace the current process
 			 * dyndhcpd is cleared from memory here and code below is not execuded if
 			 * everything goes well */
 			if (verbose > 1)
-				printf("Running: dhcpd -f -q -4 -pf %s -lf %s -cf %s %s\n",
-					pidfile, leasesfile, configfilename, interface);
-			rc = execlp(DHCPDFILE, "dhcpd", "-f", "-q", "-4",
+				printf("Running: dhcpd -f -q -4 -user %s -pf %s -lf %s -cf %s %s\n",
+					username, pidfile, leasesfile, configfilename, interface);
+			rc = execlp(DHCPDFILE, "dhcpd", "-f", "-q", "-4", "-user", username,
 				"-pf", pidfile, "-lf", leasesfile, "-cf", configfilename, interface, NULL);
 
 			fprintf(stderr, "The dhcp daemon failed to execute.\n");

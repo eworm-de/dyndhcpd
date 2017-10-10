@@ -5,7 +5,11 @@ Requires=sys-subsystem-net-devices-%i.device
 After=sys-subsystem-net-devices-%i.device
 
 [Service]
-ExecStart=/usr/bin/dyndhcpd -i%i
+ExecStart=!/usr/bin/dyndhcpd --interface %i --user %p-%i --pidfile /run/%p@%i/dhcpd.pid --leases /var/lib/%p@%i/dhcp.leases --write-config /run/%p@%i/dhcpd.conf
+RuntimeDirectory=%p@%i
+StateDirectory=%p@%i
+User=%p-%i
+DynamicUser=on
 ProtectSystem=full
 ProtectHome=on
 PrivateDevices=on
