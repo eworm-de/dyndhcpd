@@ -50,3 +50,4 @@ distclean:
 release:
 	git archive --format=tar.xz --prefix=dyndhcpd-$(VERSION)/ $(VERSION) > dyndhcpd-$(VERSION).tar.xz
 	gpg -ab dyndhcpd-$(VERSION).tar.xz
+	git notes --ref=refs/notes/signatures/tar add -C $$(git archive --format=tar --prefix=dyndhcpd-$(VERSION)/ $(VERSION) | gpg --armor --detach-sign | git hash-object -w --stdin) $(VERSION)
