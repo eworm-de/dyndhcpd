@@ -10,7 +10,7 @@ Requirements
 To compile and run `dyndhcpd` you need:
 
 * [ISC DHCPD](https://www.isc.org/software/dhcp)
-* [markdown](http://daringfireball.net/projects/markdown/) (HTML documentation)
+* [markdown](https://daringfireball.net/projects/markdown/) (HTML documentation)
 
 Build and install
 -----------------
