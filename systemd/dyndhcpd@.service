@@ -1,7 +1,8 @@
 [Unit]
 Description=IPv4 DHCP server for interface %i
 Requires=sys-subsystem-net-devices-%i.device
-After=sys-subsystem-net-devices-%i.device network.target systemd-networkd.service
+After=sys-subsystem-net-devices-%i.device network.target network-online.target systemd-networkd.service
+Wants=network-online.target
 
 [Service]
 ExecStart=!/usr/bin/dyndhcpd --interface %i --user %p-%i --pidfile /run/%p@%i/dhcpd.pid --leases /var/lib/%p@%i/dhcp.leases --write-config /run/%p@%i/dhcpd.conf
