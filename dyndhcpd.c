@@ -142,7 +142,7 @@ int main(int argc, char ** argv) {
 
 	/* get the domainname */
 	hp = gethostbyname(hostname);
-	if ((domainname = strchr(hp->h_name, '.')) != NULL)
+	if (hp && (domainname = strchr(hp->h_name, '.')) != NULL)
 		domainname++;
 	else {
 		fprintf(stderr, "Could not get domainname, using '" FALLBACKDOMAIN "'\n");
