@@ -57,8 +57,7 @@ int main(int argc, char ** argv) {
 	char * interface = NULL;
 
 	char hostname[HOST_NAME_MAX];
-	const char * domainname;
-	struct hostent *hp;
+	char * domainname;
 
 	char * template = NULL;
 	FILE * templatefile;
@@ -140,11 +139,11 @@ int main(int argc, char ** argv) {
 		goto out;
 	}
 
-	/* get the domainname */
-	hp = gethostbyname(hostname);
-	if (hp && (domainname = strchr(hp->h_name, '.')) != NULL)
+	/* get the domainname and strip it from hostname */
+	if ((domainname = strchr(hostname, '.')) != NULL) {
+		*domainname = 0;
 		domainname++;
-	else {
+	} else {
 		fprintf(stderr, "Could not get domainname, using '" FALLBACKDOMAIN "'\n");
 		domainname = FALLBACKDOMAIN;
 	}
