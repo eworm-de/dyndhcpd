@@ -40,7 +40,7 @@ int replace(char ** config, size_t *length, const char ** tmp,
 
 	if (strncmp(template, *tmp, templatelength) == 0) {
 		*config = realloc(*config, *length + strlen(value) + 1);
-		*length += sprintf(*config + *length, value);
+		*length += sprintf(*config + *length, "%s", value);
 		*tmp += templatelength;
 		return 1;
 	}
