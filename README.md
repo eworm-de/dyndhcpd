@@ -55,3 +55,6 @@ URL:
 Mirror:
 [eworm.de](https://git.eworm.de/cgit.cgi/dyndhcpd/)
 [GitLab.com](https://gitlab.com/eworm-de/dyndhcpd#dyndhcpd)
+
+---
+[⬆️ Go back to top](#top)
