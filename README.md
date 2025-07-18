@@ -25,11 +25,11 @@ Build and install
 
 Building and installing is very easy. Just run:
 
-> make
+    make
 
 followed by:
 
-> make install
+    make install
 
 This will place an executable at `/usr/bin/dyndhcpd`, template configuration
 will go to `/etc/dyndhcpd/`, documentation can be found in
