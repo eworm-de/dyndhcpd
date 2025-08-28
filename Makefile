@@ -13,7 +13,8 @@ LDFLAGS	+= -Wl,-z,now -Wl,-z,relro -pie
 
 # this is just a fallback in case you do not use git but downloaded
 # a release tarball...
-VERSION := 0.1.8
+DISTVER := 0.1.8
+VERSION ?= $(shell git describe --long 2>/dev/null || echo $(DISTVER))
 
 all: dyndhcpd README.html
 
@@ -48,6 +49,6 @@ distclean:
 	$(RM) -f *.o *~ dyndhcpd README.html version.h config.h
 
 release:
-	git archive --format=tar.xz --prefix=dyndhcpd-$(VERSION)/ $(VERSION) > dyndhcpd-$(VERSION).tar.xz
-	gpg --armor --detach-sign --comment dyndhcpd-$(VERSION).tar.xz dyndhcpd-$(VERSION).tar.xz
-	git notes --ref=refs/notes/signatures/tar add -C $$(git archive --format=tar --prefix=dyndhcpd-$(VERSION)/ $(VERSION) | gpg --armor --detach-sign --comment dyndhcpd-$(VERSION).tar | git hash-object -w --stdin) $(VERSION)
+	git archive --format=tar.xz --prefix=dyndhcpd-$(DISTVER)/ $(DISTVER) > dyndhcpd-$(DISTVER).tar.xz
+	gpg --armor --detach-sign --comment dyndhcpd-$(DISTVER).tar.xz dyndhcpd-$(DISTVER).tar.xz
+	git notes --ref=refs/notes/signatures/tar add -C $$(git archive --format=tar --prefix=dyndhcpd-$(DISTVER)/ $(DISTVER) | gpg --armor --detach-sign --comment dyndhcpd-$(DISTVER).tar | git hash-object -w --stdin) $(DISTVER)
