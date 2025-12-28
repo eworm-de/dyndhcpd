@@ -30,12 +30,14 @@ dyndhcpd: dyndhcpd.c dyndhcpd.h config.h version.h
 README.html: README.md
 	$(MD) README.md > README.html
 
-install: install-bin install-doc
+install: install-bin install-doc install-units
 
 install-bin: dyndhcpd
 	$(INSTALL) -D -m0755 dyndhcpd $(DESTDIR)/usr/bin/dyndhcpd
 	$(INSTALL) -D -m0644 config/dhcpd.conf $(DESTDIR)/etc/dyndhcpd/dhcpd.conf
 	$(INSTALL) -D -m0644 config/ipxe-options.conf $(DESTDIR)/etc/dyndhcpd/ipxe-options.conf
+
+install-units:
 	$(INSTALL) -D -m0644 systemd/dyndhcpd@.service $(DESTDIR)/usr/lib/systemd/system/dyndhcpd@.service
 
 install-doc: README.html
