@@ -5,8 +5,8 @@ dyndhcpd
 [![GitHub forks](https://img.shields.io/github/forks/eworm-de/dyndhcpd?logo=GitHub&style=flat&color=green)](https://github.com/eworm-de/dyndhcpd/network)
 [![GitHub watchers](https://img.shields.io/github/watchers/eworm-de/dyndhcpd?logo=GitHub&style=flat&color=blue)](https://github.com/eworm-de/dyndhcpd/watchers)
 
-start DHCP daemon that dynamically creates configuration based on
-assigned IP address
+**start DHCP daemon that dynamically creates configuration based on
+assigned IP address**
 
 *Use at your own risk*, pay attention to
 [license and warranty](#license-and-warranty), and
