@@ -51,5 +51,3 @@
 	"}"
 
 #endif /* _CONFIG_H */
-
-// vim: set syntax=c:

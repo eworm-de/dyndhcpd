@@ -366,5 +366,3 @@ out:
 
 	return rc;
 }
-
-// vim: set syntax=c:

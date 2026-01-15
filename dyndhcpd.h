@@ -60,5 +60,3 @@ int replace(char ** config, size_t *length, const char ** tmp,
 int main (int argc, char ** argv);
 
 #endif /* _DYNDHCPD_H */
-
-// vim: set syntax=c:
